@@ -214,6 +214,7 @@ void MKLDNNGraph::CreateGraph(const ICNNNetwork &network, const MKLDNNExtensionM
                 }
 
                 IE_ASSERT(false) << "Node has child edge without insert data";
+                return 0;
             };
 
             for (size_t childEdgeIndex = 0; childEdgeIndex < childEdges.size(); ++childEdgeIndex) {

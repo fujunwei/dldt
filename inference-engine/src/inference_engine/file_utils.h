@@ -130,7 +130,7 @@ INFERENCE_ENGINE_API_CPP(bool) isSharedLibrary(const std::string &fileName);
  */
 inline long long GetMicroSecTimer() {
 #ifdef _WIN32
-    static LARGE_INTEGER Frequency = { 0 };
+    static LARGE_INTEGER Frequency = {};
     LARGE_INTEGER timer;
     if (Frequency.QuadPart == 0) QueryPerformanceFrequency(&Frequency);
     QueryPerformanceCounter(&timer);

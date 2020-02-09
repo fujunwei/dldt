@@ -7,7 +7,9 @@
 #include <details/ie_exception.hpp>
 #include <ios>
 #include <iomanip>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <malloc.h>
+#else
 #include <mm_malloc.h>
 #endif
 #include <gna-api-types-xnn.h>

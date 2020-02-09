@@ -40,7 +40,7 @@ int mkldnn_getenv(char *value, const char *name, int length) {
     if (length > 1) {
         int value_length = 0;
 #ifdef _WIN32
-        value_length = GetEnvironmentVariable(name, value, length);
+        value_length = GetEnvironmentVariableA(name, value, length);
         if (value_length >= length) {
             result = -value_length;
         } else {

@@ -3,7 +3,9 @@
 //
 
 #include <cinttypes>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <malloc.h>
+#else
 #include <mm_malloc.h>
 #endif
 #include <cstring>
