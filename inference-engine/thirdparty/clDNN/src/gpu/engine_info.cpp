@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+
 #include "engine_info.h"
 #include "ocl_toolkit.h"
 #include <unordered_map>
@@ -20,8 +21,9 @@
 #include <cassert>
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <windows.h>  // Must be in front of other Windows header files.
+
+// #define WIN32_LEAN_AND_MEAN
 #include <SetupAPI.h>
 #include <devguid.h>
 #include <cstring>
@@ -41,7 +43,7 @@ int get_gpu_device_id()
 
 #ifdef _WIN32
     {
-        HDEVINFO device_info_set = SetupDiGetClassDevsA(&GUID_DEVCLASS_DISPLAY, NULL, NULL, DIGCF_PRESENT);
+        HDEVINFO device_info_set = SetupDiGetClassDevs(&GUID_DEVCLASS_DISPLAY, NULL, NULL, DIGCF_PRESENT);
         if (device_info_set == INVALID_HANDLE_VALUE)
             return 0;
 

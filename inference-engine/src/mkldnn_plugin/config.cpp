@@ -3,7 +3,7 @@
 //
 
 // avoiding clash of the "max" macro with std::max
-#define NOMINMAX
+// #define NOMINMAX
 
 #include "config.h"
 #include "ie_plugin_config.hpp"
