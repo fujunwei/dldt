@@ -22,12 +22,13 @@
 
 #include "ie_api.h"
 
+#if defined(ENABLE_NGRAPH)
 namespace ngraph {
 
 class Variant;
 
 }  // namespace ngraph
-
+#endif
 namespace InferenceEngine {
 
 /**
@@ -50,6 +51,7 @@ public:
         std::swap(ptr, parameter.ptr);
     }
 
+#if defined(ENABLE_NGRAPH)
     /**
      * @brief Creates parameter from variant.
      * This method creates empty parameter if variant doesn't contain Parameter
@@ -65,7 +67,7 @@ public:
      * @param var ngraph variant
      */
     Parameter(std::shared_ptr<ngraph::Variant>& var);
-
+#endif
     /**
      * @brief Copy constructor
      *
@@ -200,6 +202,7 @@ public:
         return dyn_cast<typename std::remove_cv<T>::type>(ptr);
     }
 
+#if defined(ENABLE_NGRAPH)
     /**
      * @brief Converts parameter to shared pointer on ngraph::Variant
      *
@@ -215,7 +218,7 @@ public:
     operator std::shared_ptr<ngraph::Variant>() const {
         return asVariant();
     }
-
+#endif
     /**
      * Dynamic cast to specified type
      * @tparam T type

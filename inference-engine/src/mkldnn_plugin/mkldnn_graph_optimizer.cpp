@@ -120,11 +120,13 @@ void MKLDNNGraphOptimizer::ApplyCommonGraphOptimizations(MKLDNNGraph &graph) {
     graph.RemoveDroppedNodes();
 #endif
 
+#if defined(COMPILED_CPU_MKLDNN_ACTIVATION_NODE)
     FuseConvolutionAndSimpleOperation(graph);
     graph.RemoveDroppedNodes();
 
     FuseFullyConnectedAndSimpleOperation(graph);
     graph.RemoveDroppedNodes();
+#endif
 
     FuseMVNAndSimpleOperation(graph);
     graph.RemoveDroppedNodes();

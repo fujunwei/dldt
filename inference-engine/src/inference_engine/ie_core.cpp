@@ -15,7 +15,9 @@
 #include <utility>
 #include <vector>
 
+#if defined(ENABLE_NGRAPH)
 #include <ngraph/opsets/opset.hpp>
+#endif
 #include "cpp_interfaces/base/ie_plugin_base.hpp"
 #include "details/ie_exception_conversion.hpp"
 #include "details/ie_so_pointer.hpp"
@@ -259,7 +261,9 @@ public:
                     for (auto&& extensionLocation : desc.listOfExtentions) {
                         // TODO: fix once InferenceEngine::Extension can accept FileUtils::FilePath
                         // currently, extensions cannot be loaded using wide path
+#if defined(ENABLE_NGRAPH)
                         cppPlugin.AddExtension(make_so_pointer<IExtension>(FileUtils::fromFilePath(extensionLocation)));
+#endif
                     }
                 }
 
@@ -355,6 +359,7 @@ public:
     }
 
     void addExtension(const IExtensionPtr& extension) {
+#if defined(ENABLE_NGRAPH)
         std::map<std::string, ngraph::OpSet> opsets = extension->getOpSets();
         for (const auto& it : opsets) {
             if (opsetNames.find(it.first) != opsetNames.end())
@@ -362,6 +367,7 @@ public:
             opsetNames.insert(it.first);
         }
         extensions.emplace_back(extension);
+#endif
     }
 
     const std::vector<IExtensionPtr>& getExtensions() {

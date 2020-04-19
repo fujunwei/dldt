@@ -6,7 +6,9 @@
 
 #include "ie_layers.h"
 #include "cpp/ie_cnn_network.h"
+#if defined (ENABLE_NGRAPH)
 #include <ngraph/ngraph.hpp>
+#endif
 
 IE_SUPPRESS_DEPRECATED_START
 

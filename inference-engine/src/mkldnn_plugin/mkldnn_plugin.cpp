@@ -13,8 +13,9 @@
 #include <vector>
 #include <tuple>
 #include <ie_system_conf.h>
-#include <generic_ie.hpp>
 
+#if defined(ENABLE_NGRAPH)
+#include <generic_ie.hpp>
 #include "cnn_network_ngraph_impl.hpp"
 #include "convert_function_to_cnn_network.hpp"
 #include <transformations/convert_opset1_to_legacy/convert_opset1_to_legacy.hpp>
@@ -23,6 +24,7 @@
 #include <ngraph/opsets/opset2.hpp>
 #include <ngraph/op/fused/gelu.hpp>
 #include <ngraph_ops/fully_connected.hpp>
+#endif
 
 #if !defined(__arm__) && !defined(_M_ARM) && !defined(__aarch64__) && !defined(_M_ARM64)
 #if defined(_WIN32) || defined(WIN32)
@@ -87,11 +89,12 @@ Engine::LoadExeNetworkImpl(const ICore * /*core*/, const InferenceEngine::ICNNNe
 
     std::shared_ptr<ICNNNetwork> clonedNetwork(nullptr);
 
+#if defined(ENABLE_NGRAPH)
     if (auto networkNGraph = dynamic_cast<const CNNNetworkNGraphImpl*>(&network)) {
         auto nGraphNetwork = networkNGraph->cloneNGraphImpl();
         if (!nGraphNetwork->getFunction()) {
             clonedNetwork = nGraphNetwork->getCNNNetwork();
-        } else {
+        } else {           
             const auto transformations_callback = [](const std::shared_ptr<const ::ngraph::Node> &node) -> bool {
                 return std::dynamic_pointer_cast<const ::ngraph::opset2::Gelu>(node) ||
                        std::dynamic_pointer_cast<const ::ngraph::opset2::BatchToSpace>(node) ||
@@ -103,11 +106,14 @@ Engine::LoadExeNetworkImpl(const ICore * /*core*/, const InferenceEngine::ICNNNe
             // Note: instead of running all Conversion Transformations you can make up your own transformation pipeline
             ngraph::pass::ConvertOpSet2ToOpSet1(transformations_callback).run_on_function(nGraphNetwork->getFunction());
             ngraph::pass::ConvertOpSet1ToLegacy(transformations_callback).run_on_function(nGraphNetwork->getFunction());
-            clonedNetwork = InferenceEngine::details::convertFunctionToICNNNetwork(nGraphNetwork->getFunction(), *nGraphNetwork.get());
+            clonedNetwork = InferenceEngine::details::convertFunctionToICNNNetwork(nGraphNetwork->getFunction(), *nGraphNetwork.get());          
         }
     } else {
+#endif
         clonedNetwork = cloneNet(network);
+#if defined(ENABLE_NGRAPH)
     }
+#endif
 
     auto implNetwork = std::dynamic_pointer_cast<details::CNNNetworkImpl>(clonedNetwork);
     if (implNetwork) {

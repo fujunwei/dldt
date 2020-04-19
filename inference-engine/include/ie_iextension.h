@@ -308,7 +308,7 @@ public:
     StatusCode getShapeInferImpl(IShapeInferImpl::Ptr&, const char*, ResponseDesc*) noexcept override {
         return NOT_IMPLEMENTED;
     }
-
+#if defined(ENABLE_NGRAPH)
     /**
      * @brief Returns operation sets
      * This method throws an exception if it was not implemented
@@ -334,6 +334,7 @@ public:
     virtual ILayerImpl::Ptr getImplementation(const std::shared_ptr<ngraph::Node>& node, const std::string& implType) {
         return nullptr;
     }
+#endif
 };
 
 IE_SUPPRESS_DEPRECATED_END_WIN

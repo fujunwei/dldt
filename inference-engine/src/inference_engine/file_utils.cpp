@@ -43,14 +43,8 @@ long long FileUtils::fileSize(const char* charfilepath) {
 
 void FileUtils::readAllFile(const std::string& string_file_name, void* buffer, size_t maxSize) {
     std::ifstream inputFile;
-
-#if defined(ENABLE_UNICODE_PATH_SUPPORT) && defined(_WIN32)
-    std::wstring file_name = InferenceEngine::details::multiByteCharToWString(string_file_name.c_str());
-#else
-    std::string file_name = string_file_name;
-#endif
-
-    inputFile.open(file_name, std::ios::binary | std::ios::in);
+    // Chromium libC++ only support char* type for file name.
+    inputFile.open(string_file_name, std::ios::binary | std::ios::in);
     if (!inputFile.is_open()) THROW_IE_EXCEPTION << "cannot open file " << string_file_name;
     if (!inputFile.read(reinterpret_cast<char*>(buffer), maxSize)) {
         inputFile.close();
@@ -80,11 +74,11 @@ static std::string getIELibraryPathA() {
 #ifdef _WIN32
     char ie_library_path[4096];
     HMODULE hm = NULL;
-    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
         (LPCSTR)getIELibraryPath, &hm)) {
         THROW_IE_EXCEPTION << "GetModuleHandle returned " << GetLastError();
     }
-    GetModuleFileName(hm, (LPSTR)ie_library_path, sizeof(ie_library_path));
+    GetModuleFileNameA(hm, (LPSTR)ie_library_path, sizeof(ie_library_path));
     return getPathName(std::string(ie_library_path));
 #else
 #ifdef USE_STATIC_IE

@@ -160,6 +160,7 @@ public:
         IE_SUPPRESS_DEPRECATED_END
     }
 
+#if defined(ENABLE_NGRAPH)
     /**
      * @brief Returns operation sets
      * This method throws an exception if it was not implemented
@@ -185,6 +186,7 @@ public:
     ILayerImpl::Ptr getImplementation(const std::shared_ptr<ngraph::Node>& node, const std::string& implType) override {
         return actual->getImplementation(node, implType);
     }
+#endif
 
 protected:
     /**

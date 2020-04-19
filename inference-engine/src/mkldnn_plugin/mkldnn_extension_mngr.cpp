@@ -18,6 +18,7 @@ void MKLDNNExtensionManager::AddExtension(IExtensionPtr extension) {
 InferenceEngine::ILayerImpl::Ptr MKLDNNExtensionManager::CreateImplementation(const std::shared_ptr<ngraph::Node>& op) {
     if (!op)
         THROW_IE_EXCEPTION << "Cannot get nGraph operation!";
+#if defined(ENABLE_NGRAPH)
     for (const auto& ext : _extensions) {
         auto implTypes = ext->getImplTypes(op);
         for (const auto& type : implTypes) {
@@ -28,6 +29,7 @@ InferenceEngine::ILayerImpl::Ptr MKLDNNExtensionManager::CreateImplementation(co
                 return impl;
         }
     }
+#endif
     return nullptr;
 }
 

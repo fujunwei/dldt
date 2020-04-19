@@ -68,6 +68,7 @@ public:
 #endif
 
     explicit SharedObjectLoader(LPCSTR pluginName) {
+#ifndef UNICODE
         ExcludeCurrentDirectory();
 
         shared_object = LoadLibrary(pluginName);
@@ -76,6 +77,7 @@ public:
             THROW_IE_EXCEPTION << "Cannot load library '" << pluginName << "': " << GetLastError()
                 << " from cwd: " << _getcwd(cwd, sizeof(cwd));
         }
+#endif
     }
 
     ~SharedObjectLoader() {

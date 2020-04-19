@@ -13,8 +13,9 @@
 #include <ie_parameter.hpp>
 #include <ie_iextension.h>
 #include <ie_extension.h>
+#if defined(ENABLE_NGRAPH)
 #include <ngraph/opsets/opset.hpp>
-
+#endif
 using namespace InferenceEngine;
 
 //
@@ -29,6 +30,7 @@ MemoryBlob::~MemoryBlob() {}
 //
 ILayerImpl::~ILayerImpl() {}
 ILayerExecImpl::~ILayerExecImpl() {}
+#if defined(ENABLE_NGRAPH)
 std::map<std::string, ngraph::OpSet> IExtension::getOpSets() {
     return {};
 }
@@ -39,6 +41,7 @@ std::map<std::string, ngraph::OpSet> IExtension::getOpSets() {
 std::map<std::string, ngraph::OpSet> Extension::getOpSets() {
     return actual->getOpSets();
 }
+#endif
 
 //
 // details/ie_exception.hpp
