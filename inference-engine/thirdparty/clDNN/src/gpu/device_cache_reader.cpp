@@ -44,10 +44,10 @@ std::shared_ptr<kernel_selector::TuningCache> get_cache_from_file(std::string tu
 #ifdef _WIN32
         char path[MAX_PATH];
         HMODULE hm = NULL;
-        GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+        GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
             (LPCSTR)&get_cache_from_file,
             &hm);
-        GetModuleFileName(hm, path, sizeof(path));
+        GetModuleFileNameA(hm, path, sizeof(path));
         std::string bin_path(path);
         tuning_cache_path = bin_path.substr(0, bin_path.find_last_of("\\")) + "\\cache.json";
 #else
