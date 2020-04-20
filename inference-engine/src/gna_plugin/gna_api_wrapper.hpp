@@ -123,9 +123,9 @@ public:
     intel_nnet_type_t * operator *() {
         return &obj;
     }
-    operator intel_nnet_type_t &() {
-        return *this;
-    }
+    // operator intel_nnet_type_t &() {
+    //     return *this;
+    // }
 };
 #endif
 
