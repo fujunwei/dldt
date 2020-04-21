@@ -13,10 +13,14 @@
 #include <details/caseless.hpp>
 #include <details/ie_cnn_network_iterator.hpp>
 #include <cpp/ie_cnn_network.h>
+#if defined(ENABLE_NGRAPH)
 #include <cnn_network_ngraph_impl.hpp>
+#endif
 #include <graph_tools.hpp>
 
+#if defined(ENABLE_NGRAPH)
 #include <ngraph/function.hpp>
+#endif
 
 #include <vpu/compile_env.hpp>
 
@@ -39,7 +43,12 @@ void FrontEnd::detectNetworkBatch(
     auto checkForDeprecatedCnn = [&network, &env]() {
         return !network.getFunction()
                && !env.config.forceDeprecatedCnnConversion
-               && dynamic_cast<const ie::details::CNNNetworkNGraphImpl*>(&network);
+#if defined(ENABLE_NGRAPH)
+               && dynamic_cast<const ie::details::CNNNetworkNGraphImpl*>(&network)
+#else
+               && false
+#endif
+                ;
     };
     VPU_THROW_UNLESS(!checkForDeprecatedCnn(), "Unexpected CNNNetwork format: it was converted to deprecated format prior plugin's call");
 
@@ -131,6 +140,7 @@ void FrontEnd::detectNetworkBatch(
             model->attrs().set<bool>("withDetectionOutput", true);
         }
     } else {
+#if defined(ENABLE_NGRAPH)
         const auto layers = network.getFunction()->get_ops();
         for (const auto& layer : layers) {
             if (layer->get_type_name() != std::string("DetectionOutput"))
@@ -158,6 +168,7 @@ void FrontEnd::detectNetworkBatch(
             }
             model->attrs().set<bool>("withDetectionOutput", true);
         }
+#endif
     }
 
     //

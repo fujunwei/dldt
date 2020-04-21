@@ -21,6 +21,7 @@
 #include <strsafe.h>
 #include <cfgmgr32.h>
 #include <tchar.h>
+#include <winioctl.h>
 #else
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -292,7 +293,7 @@ pcieHostError_t pcie_init(const char *slot, HANDLE *fd)
     ASSERT_XLINK_PLATFORM_R(slot, PCIE_INVALID_PARAMETERS);
     ASSERT_XLINK_PLATFORM_R(fd, PCIE_INVALID_PARAMETERS);
 
-    HANDLE hDevice = CreateFile(slot,
+    HANDLE hDevice = CreateFileA(slot,
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL,
@@ -625,7 +626,7 @@ pcieHostError_t pcie_get_device_state(const char *port_name, pciePlatformState_t
     HANDLE hDevice = INVALID_HANDLE_VALUE;  // handle to the drive to be examined
     DWORD junk     = 0;                     // discard results
 
-    hDevice = CreateFile(port_name,         // drive to open
+    hDevice = CreateFileA(port_name,         // drive to open
                          0,                 // no access to the drive
                          FILE_SHARE_READ |  // share mode
                          FILE_SHARE_WRITE,

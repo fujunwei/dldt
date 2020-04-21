@@ -8,7 +8,9 @@
 #include <utility>
 
 #include <ie_metric_helpers.hpp>
+#if defined(ENABLE_NGRAPH)
 #include <cnn_network_ngraph_impl.hpp>
+#endif
 #include <cpp_interfaces/base/ie_plugin_base.hpp>
 #include <cpp_interfaces/impl/ie_executable_network_internal.hpp>
 
@@ -35,11 +37,15 @@ ExecutableNetworkInternal::Ptr Engine::LoadExeNetworkImpl(
 
     std::shared_ptr<ICNNNetwork> clonedNetwork(nullptr);
 
+#if defined(ENABLE_NGRAPH)
     if (auto networkNGraph = dynamic_cast<const CNNNetworkNGraphImpl*>(&network)) {
         clonedNetwork = networkNGraph->cloneNGraphImpl();
     } else {
+#endif
         clonedNetwork = cloneNet(network);
+#if defined(ENABLE_NGRAPH)
     }
+#endif
 
     return std::make_shared<ExecutableNetwork>(*clonedNetwork, _devicePool, parsedConfigCopy);
 }
