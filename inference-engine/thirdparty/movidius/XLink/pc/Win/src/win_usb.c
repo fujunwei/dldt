@@ -64,7 +64,7 @@ static char *errmsg_buff = NULL;
 static size_t errmsg_buff_len = 0;
 
 static const char *format_win32_msg(DWORD errId) {
-    while(!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+    while(!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                          NULL, errId, 0, errmsg_buff, (DWORD)errmsg_buff_len, NULL)) {
         if(GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
             err_fail:
@@ -85,7 +85,7 @@ static const char *format_win32_msg(DWORD errId) {
 
 static void wperror(const char *errmsg) {
     DWORD errId = GetLastError();
-    fprintf(stderr, "%s: System err %d\n", errmsg, errId);
+    fprintf(stderr, "%s: System err %lu\n", errmsg, errId);
 }
 
 static void wstrerror(char *buff, const char *errmsg) {
@@ -122,20 +122,20 @@ int usb_can_find_by_guid(void) {
 
 static usb_dev retreive_dev_path(HDEVINFO devInfo, SP_DEVICE_INTERFACE_DATA *ifaceData) {
     usb_dev res;
-    PSP_DEVICE_INTERFACE_DETAIL_DATA detData;
+    PSP_DEVICE_INTERFACE_DETAIL_DATA_A detData;
     ULONG len, reqLen;
 
-    if(!SetupDiGetDeviceInterfaceDetail(devInfo, ifaceData, NULL, 0, &reqLen, NULL)) {
+    if(!SetupDiGetDeviceInterfaceDetailA(devInfo, ifaceData, NULL, 0, &reqLen, NULL)) {
         if(GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
             wperror("SetupDiEnumDeviceInterfaces");
             SetupDiDestroyDeviceInfoList(devInfo);
             return USB_DEV_NONE;
         }
     }
-    detData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)_alloca(reqLen);
+    detData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_A)_alloca(reqLen);
     detData->cbSize = sizeof(*detData);
     len = reqLen;
-    if(!SetupDiGetDeviceInterfaceDetail(devInfo, ifaceData, detData, len, &reqLen, NULL)) {
+    if(!SetupDiGetDeviceInterfaceDetailA(devInfo, ifaceData, detData, len, &reqLen, NULL)) {
         wperror("SetupDiGetDeviceInterfaceDetail");
         SetupDiDestroyDeviceInfoList(devInfo);
         return USB_DEV_NONE;
@@ -152,7 +152,7 @@ static const char *gen_addr(HDEVINFO devInfo, SP_DEVINFO_DATA *devInfoData, uint
     static char buff[16];
     char li_buff[128];
     unsigned int port, hub;
-    if (!SetupDiGetDeviceRegistryProperty(devInfo, devInfoData, SPDRP_LOCATION_INFORMATION, NULL, li_buff, sizeof(li_buff), NULL))
+    if (!SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData, SPDRP_LOCATION_INFORMATION, NULL, li_buff, sizeof(li_buff), NULL))
     {
         goto ret_err;
     }
@@ -462,7 +462,7 @@ int usb_bulk_write(usb_hwnd han, uint8_t ep, const void *buffer, size_t sz, uint
         if(last_bulk_errcode == ERROR_SEM_TIMEOUT)
             return USB_ERR_TIMEOUT;
         wperror("WinUsb_WritePipe");
-        printf("\nWinUsb_WritePipe failed with error:=%d\n", GetLastError());
+        printf("\nWinUsb_WritePipe failed with error:=%lu\n", GetLastError());
         return USB_ERR_FAILED;
     }
     last_bulk_errcode = 0;

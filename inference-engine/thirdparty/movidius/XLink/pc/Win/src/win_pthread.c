@@ -180,7 +180,7 @@ int pthread_setname_np(pthread_t target_thread, const char * name)
 
     SetThreadDescriptionDecl set_thread_description_func =
         (SetThreadDescriptionDecl)(GetProcAddress(
-            GetModuleHandle("Kernel32.dll"), "SetThreadDescription"));
+            GetModuleHandleA("Kernel32.dll"), "SetThreadDescription"));
 
     if (!set_thread_description_func) {
         return 0;
@@ -201,7 +201,7 @@ int pthread_getname_np(pthread_t target_thread, char *buf, size_t len)
 
     GetThreadDescriptionDecl get_thread_description_func =
         (GetThreadDescriptionDecl)(GetProcAddress(
-            GetModuleHandle("Kernel32.dll"), "GetThreadDescription"));
+            GetModuleHandleA("Kernel32.dll"), "GetThreadDescription"));
 
     if (!get_thread_description_func) {
         return 0;

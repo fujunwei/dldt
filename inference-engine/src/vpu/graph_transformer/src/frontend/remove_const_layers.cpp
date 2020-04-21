@@ -7,7 +7,9 @@
 #include "graph_transformer.h"
 
 #include "cnn_network_impl.hpp"
+#if defined(ENABLE_NGRAPH)
 #include "cnn_network_ngraph_impl.hpp"
+#endif
 
 namespace vpu {
 
@@ -20,10 +22,12 @@ void FrontEnd::removeConstLayers(ie::ICNNNetwork& network) {
     VPU_LOGGER_SECTION(env.log);
 
     ie::ICNNNetwork* cnnNetwork = &network;
+#if defined(ENABLE_NGRAPH)
     if (auto nGraphImpl = dynamic_cast<ie::details::CNNNetworkNGraphImpl*>(&network)) {
         // NGraph implementation cannot be casted to CNNNetworkImpl directly
         cnnNetwork = nGraphImpl->getCNNNetwork().get();
     }
+#endif
 
     // valid for CNNNetworkImpl only, while there's no API in ICNNNetwork to change network
     if (auto cnnNetworkImpl = dynamic_cast<ie::details::CNNNetworkImpl*>(cnnNetwork)) {
