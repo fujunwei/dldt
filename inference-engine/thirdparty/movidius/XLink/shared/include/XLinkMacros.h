@@ -42,8 +42,13 @@
 #define ALIGN_UP_INT32(x, a)   ((int32_t)(((uint32_t)(x) + a - 1) & (~(a-1))))
 #define ALIGN_UP(x, a) ALIGN_UP_UINT32(x,a)
 #else
-#define ALIGN_UP(x, a)   ((typeof(x))(((uint32_t)(x) + a - 1) & (~(a-1))))
-#define ALIGN_DOWN(x, a) ((typeof(x))(((uint32_t)(x)) & (~(a-1))) )
+// typeof() is an extension of C that has various support in respective compilers.
+// Clang does support the use of typeof(), but technically it's for when your C
+// Language Dialect is set to be a gnu* type. However __typeof__() is supported
+// in both c* and gnu* language dialects - as detailed in the Clang documentation.
+// https://stackoverflow.com/questions/14877415/difference-between-typeof-typeof-and-typeof-in-objective-c
+#define ALIGN_UP(x, a)   ((__typeof__(x))(((uint32_t)(x) + a - 1) & (~(a-1))))
+#define ALIGN_DOWN(x, a) ((__typeof__(x))(((uint32_t)(x)) & (~(a-1))) )
 #define ALIGN_UP_UINT32(_x, _a)   ALIGN_UP(_x, _a)
 #define ALIGN_UP_INT32(_x, _a)   ALIGN_UP(_x, _a)
 #endif
