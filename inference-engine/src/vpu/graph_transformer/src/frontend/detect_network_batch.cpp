@@ -45,6 +45,8 @@ void FrontEnd::detectNetworkBatch(
                && !env.config.forceDeprecatedCnnConversion
 #if defined(ENABLE_NGRAPH)
                && dynamic_cast<const ie::details::CNNNetworkNGraphImpl*>(&network)
+#else
+               && false
 #endif
                 ;
     };
