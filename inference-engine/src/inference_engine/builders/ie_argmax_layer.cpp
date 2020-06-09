@@ -61,13 +61,13 @@ Builder::ArgMaxLayer& Builder::ArgMaxLayer::setOutMaxVal(size_t outMaxVal) {
 }
 
 REG_VALIDATOR_FOR(ArgMax, [] (const InferenceEngine::Builder::Layer::CPtr& input_layer, bool partial) {
-    if (!input_layer->getInputPorts().empty() &&
-        !input_layer->getOutputPorts().empty() &&
-        !input_layer->getInputPorts()[0].shape().empty() &&
-        !input_layer->getOutputPorts()[0].shape().empty() &&
-        input_layer->getInputPorts()[0].shape() != input_layer->getOutputPorts()[0].shape()) {
-        THROW_IE_EXCEPTION << "Input and output ports should be equal";
-    }
+    // if (!input_layer->getInputPorts().empty() &&
+    //     !input_layer->getOutputPorts().empty() &&
+    //     !input_layer->getInputPorts()[0].shape().empty() &&
+    //     !input_layer->getOutputPorts()[0].shape().empty() &&
+    //     input_layer->getInputPorts()[0].shape() != input_layer->getOutputPorts()[0].shape()) {
+    //     THROW_IE_EXCEPTION << "Input and output ports should be equal";
+    // }
     Builder::ArgMaxLayer layer(input_layer);
     if (layer.getAxis() > 1) {
         THROW_IE_EXCEPTION << "axis supports only 0 and 1 values.";
