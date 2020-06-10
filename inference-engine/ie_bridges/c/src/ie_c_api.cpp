@@ -16,6 +16,7 @@
 #include <memory>
 #include <ie_extension.h>
 #include "inference_engine.hpp"
+#include "ie_builders.hpp"
 #include "details/ie_exception.hpp"
 #include "ie_compound_blob.h"
 #include "c_api/ie_c_api.h"
@@ -210,7 +211,7 @@ void ie_param_free(ie_param_t *param) {
     }
 }
 
-IEStatusCode ie_core_create(const char *xml_config_file, ie_core_t **core) {
+/*IEStatusCode ie_core_create(const char *xml_config_file, ie_core_t **core) {
     if (xml_config_file == nullptr || core == nullptr) {
         return IEStatusCode::GENERAL_ERROR;
     }
@@ -227,6 +228,144 @@ IEStatusCode ie_core_create(const char *xml_config_file, ie_core_t **core) {
     }
 
     return status;
+}
+*/
+#include <mutex>
+#include <condition_variable>
+static void fill_data_impl(float *data, size_t size, size_t duty_ratio = 10) {
+        for (size_t i = 0; i < size; i++) {
+            if ( ( i / duty_ratio)%2 == 1) {
+                data[i] = 0.0;
+            } else {
+                //data[i] = sin((float)i);
+            }
+	    data[i] = 1.0;
+        }
+    }
+
+static void fill_data(InferenceEngine::Blob::Ptr& blob) {
+        fill_data_impl(blob->buffer().as<float*>(), blob->byteSize() / sizeof(float));
+    }
+
+namespace ie = InferenceEngine;
+InferenceEngine::Blob::Ptr generateBlob(InferenceEngine::Precision precision,
+                                            InferenceEngine::SizeVector dims, InferenceEngine::Layout layout) {
+        InferenceEngine::Blob::Ptr blob = ie::make_shared_blob<float>(InferenceEngine::TensorDesc(precision, dims, layout));
+        blob->allocate();
+        fill_data(blob);
+        return blob;
+    }
+
+IEStatusCode ie_core_create(const char *xml_config_file, ie_core_t **core) {
+  ie::Core ie;
+  /** Read network model **/
+        //CNNNetwork network = ie.ReadNetwork(FLAGS_m);
+	ie::Builder::Network builder("network");
+
+  std::cout << "===== core crate";
+
+  ie::SizeVector inputDims = {1, 1, 3, 3}; // 1 KB
+
+  size_t layerId = builder.addLayer(ie::Builder::InputLayer("input").setPort(ie::Port(inputDims)));
+
+  size_t weightsId = builder.addLayer(ie::Builder::ConstLayer("weights").setData(generateBlob(ie::Precision::FP32,
+                                                                                          {1, 1, 2, 2}, ie::Layout::NCHW)));
+
+  layerId = builder.addLayer({{layerId}, {weightsId} }, ie::Builder::ConvolutionLayer("Convolution").setKernel({2, 2}).setStrides({1, 1}).setOutDepth(1)
+              .setPaddingsBegin({0, 0}).setPaddingsEnd({1, 1}).setGroup(1).setDilation({1, 1}));
+
+  builder.addLayer({ie::PortInfo(layerId)}, ie::Builder::OutputLayer("output"));
+
+  ie::CNNNetwork* network = new ie::CNNNetwork(ie::Builder::convertToICNNNetwork(builder.build()));
+  /** Taking information about all topology inputs **/
+  ie::InputsDataMap inputInfo(network->getInputsInfo());
+  if (inputInfo.size() != 1) throw std::logic_error("Sample supports topologies with 1 input only");
+
+  auto inputInfoItem = *inputInfo.begin();
+
+  /** Specifying the precision and layout of input data provided by the user.
+    * This should be called before load of the network to the device **/
+  inputInfoItem.second->setPrecision(ie::Precision::FP32);
+  inputInfoItem.second->setLayout(ie::Layout::NCHW);
+
+  /** Setting batch size using image count **/
+  network->setBatchSize(1);
+  size_t batchSize = network->getBatchSize();
+
+  // -----------------------------------------------------------------------------------------------------
+
+  // --------------------------- 4. Loading model to the device ------------------------------------------
+  ie::ExecutableNetwork executable_network = ie.LoadNetwork(*network, "MYRIAD");//MYRIAD
+  // -----------------------------------------------------------------------------------------------------
+
+  // --------------------------- 5. Create infer request -------------------------------------------------
+  std::cout << "Create infer request" << std::flush;
+  fprintf(stdout, "%s\n", "==============1111");
+  ie::InferRequest inferRequest = executable_network.CreateInferRequest();
+  // -----------------------------------------------------------------------------------------------------
+
+  // --------------------------- 6. Prepare input --------------------------------------------------------
+  for (auto & item : inputInfo) {
+    ie::Blob::Ptr inputBlob = inferRequest.GetBlob(item.first);
+    ie::SizeVector dims = inputBlob->getTensorDesc().getDims();
+    /** Fill input tensor with images. First b channel, then g and r channels **/
+    size_t num_channels = dims[1];
+    size_t image_size = dims[3] * dims[2];
+
+    float* data =
+        inputBlob->buffer()
+            .as<ie::PrecisionTrait<ie::Precision::FP32>::value_type*>();
+    /** Iterate over all input images **/
+    for (size_t i = 0; i < num_channels * image_size; ++i) {
+      data[i] = 1.0;
+    }
+  }
+
+  // -----------------------------------------------------------------------------------------------------
+
+  // --------------------------- 7. Do inference ---------------------------------------------------------
+  size_t numIterations = 10;
+  size_t curIteration = 0;
+  std::condition_variable condVar;
+
+  inferRequest.SetCompletionCallback(
+          [&] {
+              curIteration++;
+	      std::cout << "Completed " << curIteration << " async request execution";
+              if (curIteration < numIterations) {
+                  /* here a user can read output containing inference results and put new input
+                      to repeat async request again */
+                  inferRequest.StartAsync();
+              } else {
+                  /* continue sample execution after last Asynchronous inference request execution */
+                  condVar.notify_one();
+              }
+          });
+
+  /* Start async request for the first time */
+  std::cout << "Start inference (" << numIterations << " asynchronous executions)";
+  inferRequest.StartAsync();
+
+  /* Wait all repetitions of the async request */
+  std::mutex mutex;
+  std::unique_lock<std::mutex> lock(mutex);
+  condVar.wait(lock, [&]{ return curIteration == numIterations; });
+
+  // -----------------------------------------------------------------------------------------------------
+
+  // --------------------------- 8. Process output -------------------------------------------------------
+  std::cout << "Processing output blobs";
+  ie::OutputsDataMap outputInfo(network->getOutputsInfo());
+  if (outputInfo.size() != 1) assert(0);
+  ie::Blob::Ptr outputBlob = inferRequest.GetBlob(outputInfo.begin()->first);
+  ie::SizeVector outputDims = outputBlob->getTensorDesc().getDims();
+
+  float* outputData =
+        outputBlob->buffer()
+            .as<ie::PrecisionTrait<ie::Precision::FP32>::value_type*>();
+  for (size_t i = 0; i < outputDims[1] * outputDims[2] * outputDims[3]; ++i) {
+	  fprintf(stdout, "========%f\n",  outputData[i]);
+  }
 }
 
 void ie_core_free(ie_core_t **core) {

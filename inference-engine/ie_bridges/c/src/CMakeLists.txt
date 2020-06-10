@@ -7,6 +7,7 @@ if(ENABLE_LTO)
 endif()
 
 set(TARGET_NAME inference_engine_c_api)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wuninitialized -Winit-self -Wno-deprecated-declarations")
 
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 file(GLOB HEADERS ${InferenceEngine_C_API_SOURCE_DIR}/include/*.h)
@@ -15,7 +16,7 @@ file(GLOB HEADERS ${InferenceEngine_C_API_SOURCE_DIR}/include/*.h)
 
 add_library(${TARGET_NAME} SHARED ${HEADERS} ${SOURCES})
 
-target_link_libraries(${TARGET_NAME} PRIVATE inference_engine)
+target_link_libraries(${TARGET_NAME} PRIVATE inference_engine inference_engine_nn_builder)
 
 target_include_directories(${TARGET_NAME} PUBLIC "${InferenceEngine_C_API_SOURCE_DIR}/include")
 
