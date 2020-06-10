@@ -37,15 +37,15 @@
 #endif
 #endif
 
-#if defined(_WIN32)
-#define INFERENCE_ENGINE_DEPRECATED(msg) __declspec(deprecated(msg))
-#elif defined __INTEL_COMPILER
-#define INFERENCE_ENGINE_DEPRECATED(msg) __attribute__((deprecated(msg)))
-#elif defined(__GNUC__)
-#define INFERENCE_ENGINE_DEPRECATED(msg) __attribute__((deprecated((msg))))
-#else
+// #if defined(_WIN32)
+// #define INFERENCE_ENGINE_DEPRECATED(msg) __declspec(deprecated(msg))
+// #elif defined __INTEL_COMPILER
+// #define INFERENCE_ENGINE_DEPRECATED(msg) __attribute__((deprecated(msg)))
+// #elif defined(__GNUC__)
+// #define INFERENCE_ENGINE_DEPRECATED(msg) __attribute__((deprecated((msg))))
+// #else
 #define INFERENCE_ENGINE_DEPRECATED(msg)
-#endif
+// #endif
 
 #define INFERENCE_ENGINE_NN_BUILDER_DEPRECATED \
     INFERENCE_ENGINE_DEPRECATED("Use ngraph API. NN Builder API will be removed in 2020.3")

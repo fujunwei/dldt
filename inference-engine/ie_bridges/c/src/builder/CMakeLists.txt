@@ -2,21 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-if(ENABLE_LTO)
-    ie_enable_lto()
-endif()
-
-set(TARGET_NAME inference_engine_c_api)
+set(TARGET_NAME inference_engine_builder_api)
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 file(GLOB HEADERS ${InferenceEngine_C_API_SOURCE_DIR}/include/*.h)
 
+function(nn_builder_disable_warnings)
+    disable_deprecated_warnings()
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR} PROPERTIES COMPILE_FLAGS "${ie_c_cxx_deprecated}")
+endfunction()
+
+nn_builder_disable_warnings()
+
 # create library
 
 add_library(${TARGET_NAME} SHARED ${HEADERS} ${SOURCES})
-
-target_compile_definitions(${TARGET_NAME} PRIVATE inference_engine_c_api_EXPORTS)
 
 target_link_libraries(${TARGET_NAME} PRIVATE inference_engine inference_engine_nn_builder)
 
@@ -38,5 +39,3 @@ install(TARGETS ${TARGET_NAME}
 install(DIRECTORY ${InferenceEngine_C_API_SOURCE_DIR}/include/
         DESTINATION ${IE_CPACK_IE_DIR}/include/
         COMPONENT core)
-
-add_subdirectory(builder)

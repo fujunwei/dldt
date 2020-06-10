@@ -16,6 +16,7 @@
 #include <memory>
 #include <ie_extension.h>
 #include "inference_engine.hpp"
+#include "ie_builders.hpp"
 #include "details/ie_exception.hpp"
 #include "ie_compound_blob.h"
 #include "c_api/ie_c_api.h"
