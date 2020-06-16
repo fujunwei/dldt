@@ -144,11 +144,13 @@ static int __attribute__ ((unused))
 logprintf(enum mvLog_t lvl, const char * func, const int line,
           const char * format, ...)
 {
+#if !defined(OS_CHROMEOS)
     if((MVLOGLEVEL(MVLOG_UNIT_NAME) == MVLOG_LAST && lvl < MVLOGLEVEL(default)))
         return 0;
 
     if((MVLOGLEVEL(MVLOG_UNIT_NAME) < MVLOG_LAST && lvl < MVLOGLEVEL(MVLOG_UNIT_NAME)))
         return 0;
+#endif
 
     const char headerFormat[] = "%s [%s] [%10" PRId64 "] [%s] %s:%d\t";
 #ifdef __RTEMS__
@@ -174,7 +176,13 @@ logprintf(enum mvLog_t lvl, const char * func, const int line,
     if(!rtems_interrupt_is_in_progress())
     {
 #endif
-#if defined __sparc__ || defined __PC__
+#if defined(OS_CHROMEOS)
+    FILE * fd = fopen("/tmp/vpu.log","a");
+    fprintf(fd, headerFormat, mvLogHeader[lvl], UNIT_NAME_STR, timestamp, threadName, func, line);
+    vfprintf(fd, format, args);
+    fprintf(fd, "%s\n", ANSI_COLOR_RESET);
+    fclose(fd);
+#elif defined __sparc__ || defined __PC__
     fprintf(stdout, headerFormat, mvLogHeader[lvl], UNIT_NAME_STR, timestamp, threadName, func, line);
     vfprintf(stdout, format, args);
     fprintf(stdout, "%s\n", ANSI_COLOR_RESET);
