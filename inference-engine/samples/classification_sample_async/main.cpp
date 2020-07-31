@@ -15,6 +15,7 @@
 #include <map>
 #include <condition_variable>
 #include <mutex>
+#include <time.h>
 
 #include <inference_engine.hpp>
 
@@ -30,6 +31,9 @@
 #include "classification_sample_async.h"
 
 using namespace InferenceEngine;
+typedef std::chrono::high_resolution_clock Time;
+typedef std::chrono::duration<double, std::ratio<1, 1000>> ms;
+typedef std::chrono::duration<float> fsec;
 
 bool ParseAndCheckCommandLine(int argc, char *argv[]) {
     // ---------------------------Parsing and validation of input args--------------------------------------
@@ -186,10 +190,13 @@ int main(int argc, char *argv[]) {
         size_t curIteration = 0;
         std::condition_variable condVar;
 
+        auto t0 = Time::now();
+        auto t1 = t0;
+        double totalTime = 0.0;
         inferRequest.SetCompletionCallback(
                 [&] {
                     curIteration++;
-                    slog::info << "Completed " << curIteration << " async request execution" << slog::endl;
+                    //slog::info << "Completed " << curIteration << " async request execution" << slog::endl;
                     if (curIteration < numIterations) {
                         /* here a user can read output containing inference results and put new input
                            to repeat async request again */
@@ -208,6 +215,17 @@ int main(int argc, char *argv[]) {
         std::mutex mutex;
         std::unique_lock<std::mutex> lock(mutex);
         condVar.wait(lock, [&]{ return curIteration == numIterations; });
+
+        t1 = Time::now();
+        fsec fs = t1 - t0;
+        ms d = std::chrono::duration_cast<ms>(fs);
+        totalTime += d.count();
+        /** Show performance results **/
+        std::cout << "Total time in Infer (HW and SW):\t" << totalTime << " ms"
+                    << std::endl;
+        std::cout << "Num iterations" << numIterations << std::endl;
+        std::cout << "Average Infer time per iterations:\t\t" << totalTime / static_cast<double>(numIterations) << " ms"
+                    << std::endl;
 
         // -----------------------------------------------------------------------------------------------------
 
