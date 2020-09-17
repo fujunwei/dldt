@@ -2,25 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-if(ENABLE_LTO)
-    ie_enable_lto()
-endif()
-
-set(TARGET_NAME inference_engine_c_api)
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+set(TARGET_NAME ie_nn_c_api)
 
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-file(GLOB HEADERS ${InferenceEngine_C_API_SOURCE_DIR}/include/*.h)
+file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 
 # create library
 
 add_library(${TARGET_NAME} SHARED ${HEADERS} ${SOURCES})
 
-target_compile_definitions(${TARGET_NAME} PRIVATE inference_engine_c_api_EXPORTS)
+find_package(ngraph REQUIRED)
 
-target_link_libraries(${TARGET_NAME} PRIVATE inference_engine inference_engine_nn_builder)
+target_link_libraries(${TARGET_NAME} PRIVATE inference_engine ${NGRAPH_LIBRARIES})
 
-target_include_directories(${TARGET_NAME} PUBLIC "${InferenceEngine_C_API_SOURCE_DIR}/include")
+target_include_directories(${TARGET_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}" )
 
 add_cpplint_target(${TARGET_NAME}_cpplint FOR_TARGETS ${TARGET_NAME})
 
@@ -39,5 +34,3 @@ install(DIRECTORY ${InferenceEngine_C_API_SOURCE_DIR}/include/
         DESTINATION ${IE_CPACK_IE_DIR}/include/
         COMPONENT core)
 
-add_subdirectory(builder)
-add_subdirectory(ienn)
