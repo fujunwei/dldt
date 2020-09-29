@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ie_nn_c_api.h"
+#include "ngraph/node.hpp"
 
 namespace InferenceEngine {
 
@@ -89,19 +90,9 @@ struct ElementWiseParams {
 
 struct ConvParams {
   bool depthwise;
-  bool atrous;
-  uint32_t input_batch;
-  uint32_t input_height;
-  uint32_t input_width;
-  uint32_t input_channel;
-  uint32_t output_batch;
-  uint32_t output_height;
-  uint32_t output_width;
-  uint32_t output_channel;
   uint32_t filter_height;
   uint32_t filter_width;
   uint32_t bias_length;
-  uint32_t depth_in;
   uint32_t depth_out;
   uint32_t padding_left;
   uint32_t padding_right;
@@ -111,8 +102,8 @@ struct ConvParams {
   uint32_t stride_height;
   uint32_t dilation_width;
   uint32_t dilation_height;
-  uint32_t depthwise_multiplier;
   int32_t fuse_code;
+  bool nhwc_layout;
 };
 
 struct PoolingParams {
@@ -133,6 +124,7 @@ struct PoolingParams {
   uint32_t stride_width;
   uint32_t stride_height;
   int32_t fuse_code;
+  bool nhwc_layout;
 };
 
 struct SoftmaxParams {
@@ -144,9 +136,9 @@ struct ConcatParams {
 };
 
 struct FullyConnectedParams {
-  int32_t input_batch_size;
+  size_t input_batch_size;
   uint32_t num_units;
-  int32_t input_size;
+  size_t input_size;
   uint32_t bias_num_units;
   uint32_t output_batch_size;
   uint32_t output_num_units;
@@ -161,10 +153,19 @@ struct ResizeBilinearParams {
   float y_scale;
   float x_scale;
   bool align_corners;
+  bool nhwc_layout = true;
 };
 
 struct ArgmaxParams {
   int32_t axis;
+};
+
+struct ReshapeParams {
+  std::vector<size_t> new_shape;
+};
+
+struct TransposeParams {
+  std::vector<size_t> permutation;
 };
 
 int32_t GetScalarInt32(ModelInfoPtr model, uint32_t index);
@@ -174,10 +175,12 @@ float GetScalarFloat(ModelInfoPtr model, uint32_t index);
 int32_t GetElementWiseParams(ModelInfoPtr model,
                              const Operation&,
                              ElementWiseParams&);
-
 int32_t GetConvParams(ModelInfoPtr model, const Operation&, ConvParams&);
 
-int32_t GetPoolingParams(ModelInfoPtr model, const Operation&, PoolingParams&);
+int32_t GetPoolingParams(ModelInfoPtr model,
+                         const Operation& operation,
+                         const ngraph::Output<ngraph::Node>& input_node,
+                         PoolingParams& params);
 
 int32_t GetSoftmaxParams(ModelInfoPtr model, const Operation&, SoftmaxParams&);
 
@@ -193,6 +196,14 @@ int32_t GetResizeBilinearParams(ModelInfoPtr model,
 
 int32_t GetArgmaxParams(ModelInfoPtr model, const Operation&, ArgmaxParams&);
 
+int32_t GetReshapeParams(ModelInfoPtr model,
+                         const Operation& operation,
+                         ReshapeParams& params);
+
+int32_t GetTransposeParams(ModelInfoPtr model,
+                           const Operation& operation,
+                           const ngraph::Output<ngraph::Node>& input_node,
+                           TransposeParams& params);
 }  // namespace InferenceEngine
 
 #endif  // IE_UTILS_H
